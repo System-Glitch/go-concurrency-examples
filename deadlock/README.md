@@ -1,0 +1,1 @@
+The program is stuck forever because it waits for a value written in the `c2` channel. However, `toStr` only writes in its channel if `val` is superior to 0.
