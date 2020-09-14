@@ -1,0 +1,1 @@
+In this example, we are using `select` to pick the goroutine that writes first to its channel. We are also using a timeout in case the worker routines are too slow.
