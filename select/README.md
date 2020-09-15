@@ -1,6 +1,6 @@
-In this example, we are using `select` to receive messages from multiple goroutines in a central goroutine. Note that the ordering is not guaranteed.
+In this example, we are using `select` to receive messages from multiple goroutines in a central goroutine, using a single channel. This kind of mechanism is often used with long-lived workers.
 
-We are also using a timeout in case the worker routines are too slow.
+We are also using a context to gracefully terminate our goroutines. We are listening OS signals SIGINT and SIGTERM to properly exit the program.
 
 ```
 $ go run -race select.go 

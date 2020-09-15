@@ -3,60 +3,52 @@ package main
 import (
 	"context"
 	"fmt"
-	"sync"
+	"math/rand"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
-var wg sync.WaitGroup
-
 func message(ctx context.Context, ch chan int) {
-	defer wg.Done()
 	defer close(ch)
-	for i := 0; i < 3; i++ {
-		n := i
+	for {
+		n := rand.Intn(100)
 		select {
 		case <-ctx.Done():
 			return
 		case ch <- n:
 		}
+		time.Sleep(time.Duration(rand.Intn(4)+1) * time.Second)
 	}
 }
 
 func main() {
-	ch1 := make(chan int)
-	ch2 := make(chan int)
-	done := make(chan bool)
+	ch := make(chan int)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	wg.Add(2)
-	go message(ctx, ch1)
-	go message(ctx, ch2)
+	sigChannel := make(chan os.Signal, 1)
+	signal.Notify(sigChannel, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		wg.Wait()
-		select {
-		case <-ctx.Done():
-		case done <- true:
-		}
+		<-sigChannel
+		cancel()
 	}()
+
+	for i := 0; i < 3; i++ {
+		go message(ctx, ch)
+	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Timeout!")
-			return
-		case i, ok := <-ch1:
-			if ok {
-				fmt.Println("Received message from ch1:", i)
-			}
-		case i, ok := <-ch2:
-			if ok {
-				fmt.Println("Received message from ch2:", i)
-			}
-		case <-done:
 			fmt.Println("All done!")
 			return
+		case i, ok := <-ch:
+			if ok {
+				fmt.Println("Received message:", i)
+			}
 		}
 	}
 }
