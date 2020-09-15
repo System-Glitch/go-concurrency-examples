@@ -24,6 +24,7 @@ func message(ctx context.Context, ch chan int) {
 }
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
 	ch := make(chan int)
 
 	ctx, cancel := context.WithCancel(context.Background())
